@@ -249,7 +249,7 @@ MonoBehaviour:
   bodyColliders: []
   arenaLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
   opponent: {fileID: 0}
   stats: {fileID: 11400000, guid: b2ba214b5ffc7404aa5445283931ce02, type: 2}
   fallbackInitialSpin: 3000
