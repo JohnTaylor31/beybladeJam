@@ -5,16 +5,19 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void PlayGame()
     {
         SceneManager.LoadSceneAsync("SampleScene");
     }
 
-    // Update is called once per frame
-public void QuitGame()
+    public void QuitGame()
     {
         Application.Quit();
         Debug.Log("Game Quit");
+    }
+
+    public void GoToMainMenu()
+    {
+        SceneManager.LoadSceneAsync("MainMenu");
     }
 }
