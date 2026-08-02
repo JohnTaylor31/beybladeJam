@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbf45b74135d2e744bcd335471bd2453, type: 3}
   m_Name: BeybladeStats
   m_EditorClassIdentifier: Assembly-CSharp::BeybladeStats
-  initialSpin: 0
+  initialSpin: 200
   spinToMoveFactor: 0.15
   massMultiplier: 1
   staminaDecayPerSecond: 0.02
