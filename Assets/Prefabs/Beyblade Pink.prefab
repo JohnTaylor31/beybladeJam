@@ -316,6 +316,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6344537959616172032}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3560143948408435148}
     - targetCorrespondingSourceObject: {fileID: 2670701923347983730, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8059909736561816258}
@@ -520,3 +523,19 @@ MonoBehaviour:
   landingBlendTime: 0.12
   uprightTorqueBase: 40
   uprightTorqueSpinScale: 0.02
+--- !u!114 &3560143948408435148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8838039517917234636}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e86ee08da2003084e87560bbc950bf72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BeybladeCollisionEffects
+  collisionEffectPrefab: {fileID: 0}
+  minImpactVelocity: 0.5
+  maxImpactVelocity: 10
+  collisionSound: {fileID: 0}
