@@ -319,6 +319,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3560143948408435148}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4846631566873783995}
     - targetCorrespondingSourceObject: {fileID: 2670701923347983730, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8059909736561816258}
@@ -535,7 +538,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e86ee08da2003084e87560bbc950bf72, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeybladeCollisionEffects
-  collisionEffectPrefab: {fileID: 0}
+  collisionEffectPrefab: {fileID: 5358662858033304606, guid: 73a2d209ef750cc45a25e0481a7c6548, type: 3}
   minImpactVelocity: 0.5
   maxImpactVelocity: 10
   collisionSound: {fileID: 0}
+--- !u!114 &-4846631566873783995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8838039517917234636}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23931a2553da3aa46b8ee21be14eb239, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BeybladeSpinVFX
+  spinEffectPrefab: {fileID: 0}
+  minSpinToShow: 50
