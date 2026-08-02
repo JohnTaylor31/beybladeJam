@@ -452,7 +452,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeybladeColliderSetup
   tipCollider: {fileID: 8059909736561816258}
-  bodyColliders: []
+  bodyColliders:
+  - {fileID: 1281328447354479126}
+  - {fileID: 7098987940874657754}
+  - {fileID: 8188185370539265834}
+  - {fileID: 8550034952884348726}
   arenaLayerName: Arena
   lowFrictionMaterial: {fileID: 13400000, guid: 80f9621687964954cabeefa77e2df30c, type: 2}
 --- !u!54 &29607227428892522
@@ -495,11 +499,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeybladeController
   tipCollider: {fileID: 8059909736561816258}
-  bodyColliders: []
+  bodyColliders:
+  - {fileID: 1281328447354479126}
+  - {fileID: 7098987940874657754}
+  - {fileID: 8188185370539265834}
+  - {fileID: 8550034952884348726}
   arenaLayer:
     serializedVersion: 2
-    m_Bits: 0
-  opponent: {fileID: 0}
+    m_Bits: 64
+  opponent: {fileID: 6080698093680034753, guid: 3f2f76a49d0133c418867a891063c85a, type: 3}
   stats: {fileID: 11400000, guid: b2ba214b5ffc7404aa5445283931ce02, type: 2}
   fallbackInitialSpin: 3000
   fallbackSpinToMove: 0.15

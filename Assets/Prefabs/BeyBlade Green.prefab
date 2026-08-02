@@ -1114,7 +1114,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeybladeColliderSetup
   tipCollider: {fileID: 5348004261622158402}
-  bodyColliders: []
+  bodyColliders:
+  - {fileID: 779790873481359000}
+  - {fileID: 7542694618158194250}
+  - {fileID: 9043990335773985231}
+  - {fileID: 7845942091360393966}
   arenaLayerName: Arena
   lowFrictionMaterial: {fileID: 13400000, guid: 80f9621687964954cabeefa77e2df30c, type: 2}
 --- !u!54 &7633835719267061266
@@ -1127,7 +1131,7 @@ Rigidbody:
   serializedVersion: 5
   m_Mass: 1
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0.01
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -1157,20 +1161,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeybladeController
   tipCollider: {fileID: 5348004261622158402}
-  bodyColliders: []
+  bodyColliders:
+  - {fileID: 779790873481359000}
+  - {fileID: 7542694618158194250}
+  - {fileID: 9043990335773985231}
+  - {fileID: 7845942091360393966}
   arenaLayer:
     serializedVersion: 2
-    m_Bits: 0
-  opponent: {fileID: 0}
+    m_Bits: 64
+  opponent: {fileID: 6344537959616172032, guid: 83a0f770c04615e4aaf8e7fbb75e3b06, type: 3}
   stats: {fileID: 11400000, guid: b2ba214b5ffc7404aa5445283931ce02, type: 2}
   fallbackInitialSpin: 3000
   fallbackSpinToMove: 0.15
-  fallbackCenterPull: 0.8
+  fallbackCenterPull: 2
   fallbackMinSpinToLive: 30
   fallbackKoGrace: 0.5
   baseMass: 200
   centerOfMassOffset: {x: 0, y: -10, z: 0}
-  linearDamping: 0.05
+  linearDamping: 0.01
   angularDamping: 0.01
   contactRayDistance: 2
   launchImpulse: 1

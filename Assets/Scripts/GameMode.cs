@@ -9,6 +9,11 @@ public class GameMode : MonoBehaviour
     public float spawnHeight = 0.1f;
     public float restartDelay = 2f;
 
+    [Header("Inspector Spawning")]
+    public GameObject playerBeyblade;
+    public GameObject opponentBeyblade;
+    public bool useInspectorSpawn = false;
+
     GameObject a, b;
 
     void Awake() { if (Instance == null) Instance = this; else Destroy(gameObject); }
@@ -19,9 +24,21 @@ public class GameMode : MonoBehaviour
     {
         if (a != null) Destroy(a);
         if (b != null) Destroy(b);
-        Vector3 center = arenaCenter != null ? arenaCenter.position : Vector3.zero;
-        a = Spawn(center, 0f, "A");
-        b = Spawn(center, 180f, "B");
+
+        if (useInspectorSpawn && playerBeyblade != null && opponentBeyblade != null)
+        {
+            // Use Inspector-assigned beyblades
+            a = playerBeyblade;
+            b = opponentBeyblade;
+        }
+        else
+        {
+            // Spawn new beyblades using the prefab
+            Vector3 center = arenaCenter != null ? arenaCenter.position : Vector3.zero;
+            a = Spawn(center, 0f, "A");
+            b = Spawn(center, 180f, "B");
+        }
+
         var ca = a.GetComponent<BeybladeController>();
         var cb = b.GetComponent<BeybladeController>();
         if (ca != null && cb != null) { ca.opponent = cb; cb.opponent = ca; }
