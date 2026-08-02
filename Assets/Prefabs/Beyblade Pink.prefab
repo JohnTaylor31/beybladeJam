@@ -463,7 +463,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8838039517917234636}
   serializedVersion: 5
-  m_Mass: 1
+  m_Mass: 0.5
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -504,13 +504,13 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   opponent: {fileID: 0}
-  stats: {fileID: 11400000, guid: b2ba214b5ffc7404aa5445283931ce02, type: 2}
-  fallbackInitialSpin: 3000
+  stats: {fileID: 0}
+  fallbackInitialSpin: 60
   fallbackSpinToMove: 0.15
   fallbackCenterPull: 0.8
   fallbackMinSpinToLive: 30
   fallbackKoGrace: 0.5
-  baseMass: 200
+  baseMass: 2000
   centerOfMassOffset: {x: 0, y: -10, z: 0}
   linearDamping: 0.05
   angularDamping: 0.01
