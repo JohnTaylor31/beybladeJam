@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BeybladeStats
   initialSpin: 200
   spinToMoveFactor: 0.15
-  massMultiplier: 1
+  massMultiplier: 1.3
   staminaDecayPerSecond: 0.02
   speedDecayPerSecond: 0.01
   impactForce: 10
   spinLossOnHit: 0.95
   orbitForce: 3
-  centerPullStrength: 0.8
-  minSpinToLive: 30
+  centerPullStrength: 1
+  minSpinToLive: 0.1
   koGraceSeconds: 0.5

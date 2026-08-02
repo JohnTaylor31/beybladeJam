@@ -14,7 +14,10 @@ public class GameMode : MonoBehaviour
     public GameObject opponentBeyblade;
     public bool useInspectorSpawn = false;
 
-    GameObject a, b;
+    GameObject _a;
+    GameObject _b;
+    public GameObject a { get { return _a; } private set { _a = value; } }
+    public GameObject b { get { return _b; } private set { _b = value; } }
 
     void Awake() { if (Instance == null) Instance = this; else Destroy(gameObject); }
 
@@ -22,14 +25,27 @@ public class GameMode : MonoBehaviour
 
     public void StartMatch()
     {
-        if (a != null) Destroy(a);
-        if (b != null) Destroy(b);
+        // Always clean up old beyblades (both stopped ones and active ones)
+        CleanupBeyblades();
 
         if (useInspectorSpawn && playerBeyblade != null && opponentBeyblade != null)
         {
-            // Use Inspector-assigned beyblades
-            a = playerBeyblade;
-            b = opponentBeyblade;
+            // Check if the assigned beyblades are actually in the scene (not prefabs)
+            // If they are scene instances, use them directly
+            if (playerBeyblade.scene.isLoaded && opponentBeyblade.scene.isLoaded)
+            {
+                a = playerBeyblade;
+                b = opponentBeyblade;
+            }
+            else
+            {
+                // They are prefabs, so instantiate them
+                Vector3 center = arenaCenter != null ? arenaCenter.position : Vector3.zero;
+                a = Instantiate(playerBeyblade, center + Quaternion.Euler(0, 0f, 0) * Vector3.right * spawnRadius + Vector3.up * spawnHeight, Quaternion.identity);
+                b = Instantiate(opponentBeyblade, center + Quaternion.Euler(0, 180f, 0) * Vector3.right * spawnRadius + Vector3.up * spawnHeight, Quaternion.identity);
+                a.name = "Beyblade_A";
+                b.name = "Beyblade_B";
+            }
         }
         else
         {
@@ -42,6 +58,19 @@ public class GameMode : MonoBehaviour
         var ca = a.GetComponent<BeybladeController>();
         var cb = b.GetComponent<BeybladeController>();
         if (ca != null && cb != null) { ca.opponent = cb; cb.opponent = ca; }
+    }
+
+    void CleanupBeyblades()
+    {
+        // Destroy all Beyblades in the scene (both old spawned ones and stopped ones)
+        BeybladeController[] allBeyblades = Object.FindObjectsByType<BeybladeController>(FindObjectsSortMode.None);
+        foreach (BeybladeController beyblade in allBeyblades)
+        {
+            Destroy(beyblade.gameObject);
+        }
+
+        a = null;
+        b = null;
     }
 
     GameObject Spawn(Vector3 center, float angle, string id)

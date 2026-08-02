@@ -1,0 +1,1 @@
+using UnityEngine; using UnityEngine.UI; public class BeybladeUIManager : MonoBehaviour { private bool uiCreated; void Update() { if (!uiCreated) { TryCreateUI(); } } void TryCreateUI() { BeybladeController[] beyblades = Object.FindObjectsByType<BeybladeController>(FindObjectsSortMode.None); if (beyblades.Length < 2) return; uiCreated = true; } }
