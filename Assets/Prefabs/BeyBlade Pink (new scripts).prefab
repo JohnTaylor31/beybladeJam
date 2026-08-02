@@ -274,7 +274,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
       propertyPath: m_Name
-      value: BeyBlade Pink
+      value: BeyBlade Pink (new scripts)
       objectReference: {fileID: 0}
     - target: {fileID: 4120388956878230100, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
       propertyPath: m_LocalRotation.w
@@ -309,13 +309,16 @@ PrefabInstance:
       addedObject: {fileID: 3101669078396810796}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 846779512559462848}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 29607227428892522}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6344537959616172032}
+      addedObject: {fileID: 2679889584277743210}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7139585022979466330}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8140877099622632276}
     - targetCorrespondingSourceObject: {fileID: 2670701923347983730, guid: e93c94a3fd0d5d04c9ead3ce7e9c8bd1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8059909736561816258}
@@ -439,22 +442,6 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &846779512559462848
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8838039517917234636}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 21bca7f27bcf2f24a8d128064fda4a62, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BeybladeColliderSetup
-  tipCollider: {fileID: 8059909736561816258}
-  bodyColliders: []
-  arenaLayerName: Arena
-  lowFrictionMaterial: {fileID: 13400000, guid: 80f9621687964954cabeefa77e2df30c, type: 2}
 --- !u!54 &29607227428892522
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -463,7 +450,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8838039517917234636}
   serializedVersion: 5
-  m_Mass: 0.5
+  m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -482,7 +469,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &6344537959616172032
+--- !u!114 &2679889584277743210
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -491,32 +478,71 @@ MonoBehaviour:
   m_GameObject: {fileID: 8838039517917234636}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 865c88c4c3e9ee24d83cb2c72644bf35, type: 3}
+  m_Script: {fileID: 11500000, guid: 35cd8ff6e8ca85049aef17cafe37205c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BeybladeController
+  m_EditorClassIdentifier: Assembly-CSharp::BeybladeColliderSetup_v2
   tipCollider: {fileID: 8059909736561816258}
-  bodyColliders:
+  middleCollider: {fileID: 4440337179449601415}
+  topPartCollider: {fileID: 8679335859797641592}
+  bladeColliders:
   - {fileID: 1281328447354479126}
   - {fileID: 7098987940874657754}
   - {fileID: 8188185370539265834}
   - {fileID: 8550034952884348726}
   arenaLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
+  lowFrictionMaterial: {fileID: 13400000, guid: 80f9621687964954cabeefa77e2df30c, type: 2}
+--- !u!114 &7139585022979466330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8838039517917234636}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6fc9e1218cff94419f497ab14a70e6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BeybladeCorePhysics_Modular
+  rb: {fileID: 29607227428892522}
+  tipCollider: {fileID: 8059909736561816258}
+  arenaLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  initialSpin: 3000
+  spinToMoveFactor: 0.15
+  enableSlopeMovement: 1
+  enableCentrePull: 1
+  enableOpponentAttraction: 0
+  enableUprightTorque: 0
+  enableDamping: 1
+  enableKO: 1
+  landingRayDistance: 0.25
+  contactRayDistance: 2
+  centrePullStrength: 0.8
+  attractionStrength: 1
   opponent: {fileID: 0}
-  stats: {fileID: 0}
-  fallbackInitialSpin: 60
-  fallbackSpinToMove: 0.15
-  fallbackCenterPull: 0.8
-  fallbackMinSpinToLive: 30
-  fallbackKoGrace: 0.5
-  baseMass: 2000
-  centerOfMassOffset: {x: 0, y: -10, z: 0}
   linearDamping: 0.05
   angularDamping: 0.01
-  contactRayDistance: 2
-  launchImpulse: 1
-  landingRayDistance: 0.25
-  landingBlendTime: 0.12
-  uprightTorqueBase: 40
-  uprightTorqueSpinScale: 0.02
+  minSpinToLive: 30
+  koGraceSeconds: 0.5
+--- !u!114 &8140877099622632276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8838039517917234636}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf829904b3ebf094da5ab840e280c60b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BeybladeSurfaceAlign_Modular
+  alignSpeed: 10
+  maxTiltAngle: 20
+  raycastDistance: 2
+  tipCollider: {fileID: 8059909736561816258}
+  arenaLayer:
+    serializedVersion: 2
+    m_Bits: 64
