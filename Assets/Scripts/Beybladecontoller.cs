@@ -16,7 +16,8 @@ public class BeybladeController : MonoBehaviour
     public float fallbackInitialSpin = 3000f;
     public float fallbackSpinToMove = 0.15f;
     public float fallbackCenterPull = 0.8f;
-    public float fallbackMinSpinToLive = 30f;
+    public float fallbackSpinDecay = 0.02f;     // spin decay per second
+    public float fallbackBodyContactDecay = 0.5f; // spin decay when body collider touches arena
     public float fallbackKoGrace = 0.5f;
 
     [Header("Rigidbody tuning")]
@@ -33,9 +34,9 @@ public class BeybladeController : MonoBehaviour
     public float landingRayDistance = 0.25f;    // short ray to detect tip contact
     public float landingBlendTime = 0.12f;      // smooth in lateral forces after landing
 
-    [Header("Upright stabilization")]
-    public float uprightTorqueBase = 40f;       // base upright torque
-    public float uprightTorqueSpinScale = 0.02f;// additional torque per unit spin
+    [Header("Friction blending")]
+    public float highSpinThreshold = 500f;      // spin speed above this = high slip
+    public float lowSpinThreshold = 100f;       // spin speed below this = high grip
 
     // runtime
     Rigidbody rb;
@@ -46,11 +47,15 @@ public class BeybladeController : MonoBehaviour
     bool hasLanded = false;
     float landingBlend = 0f;
 
+    // spinSpeed: tracks rotation magnitude, only decreases, never reverses
+    public float spinSpeed = 0f;
+
     // cached tuning
     float initialSpin;
     float spinToMoveFactor;
     float centerPullStrength;
-    float minSpinToLive;
+    float spinDecayPerSecond;
+    float bodyContactSpinDecay;
     float koGraceSeconds;
 
     void Awake()
@@ -66,7 +71,8 @@ public class BeybladeController : MonoBehaviour
             initialSpin = stats.initialSpin;
             spinToMoveFactor = stats.spinToMoveFactor;
             centerPullStrength = stats.centerPullStrength;
-            minSpinToLive = stats.minSpinToLive;
+            spinDecayPerSecond = stats.staminaDecayPerSecond;
+            bodyContactSpinDecay = stats.staminaDecayPerSecond * 25f; // extra decay on body contact
             koGraceSeconds = stats.koGraceSeconds;
             rb.mass = baseMass * Mathf.Max(0.01f, stats.massMultiplier);
         }
@@ -75,23 +81,29 @@ public class BeybladeController : MonoBehaviour
             initialSpin = fallbackInitialSpin;
             spinToMoveFactor = fallbackSpinToMove;
             centerPullStrength = fallbackCenterPull;
-            minSpinToLive = fallbackMinSpinToLive;
+            spinDecayPerSecond = fallbackSpinDecay;
+            bodyContactSpinDecay = fallbackBodyContactDecay;
             koGraceSeconds = fallbackKoGrace;
             rb.mass = baseMass;
         }
 
+        // Initialize spinSpeed to initial rotation
+        spinSpeed = initialSpin;
+
         // Rigidbody basic tuning
         rb.centerOfMass = centerOfMassOffset;
-        rb.linearDamping = 0f;
-        rb.angularDamping = angularDamping;
         rb.linearDamping = linearDamping;
+        rb.angularDamping = angularDamping;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.maxAngularVelocity = 4000f;
         Physics.defaultMaxAngularSpeed = 4000f;
 
-        // Apply clean spin only around local up
-        rb.AddTorque(transform.up * initialSpin, ForceMode.VelocityChange);
+        // Gravity scale must be 1.0
+        rb.useGravity = true;
+
+        // Apply initial spin around local up (driven by spinSpeed)
+        rb.angularVelocity = transform.up * spinSpeed;
 
         // Small horizontal impulse at tip (no vertical component)
         if (tipCollider != null && launchImpulse > 0f)
@@ -109,6 +121,16 @@ public class BeybladeController : MonoBehaviour
     {
         if (isKO) return;
 
+        // Check if beyblade has left the arena
+        if (HasLeftArena())
+        {
+            HandleKO();
+            return;
+        }
+
+        // Apply spin decay (natural friction loss)
+        spinSpeed = Mathf.Max(0f, spinSpeed - spinDecayPerSecond * Time.fixedDeltaTime);
+
         // If not landed yet, only allow spin; detect landing with a short raycast from the tip
         if (!hasLanded)
         {
@@ -124,13 +146,33 @@ public class BeybladeController : MonoBehaviour
             }
             else
             {
-                // still airborne: do not apply lateral forces or attraction
+                // still airborne: drive angular velocity from spinSpeed, do not apply lateral forces
+                rb.angularVelocity = transform.up * spinSpeed;
                 return;
             }
         }
 
         // Blend in lateral forces smoothly after landing
         landingBlend = Mathf.Min(1f, landingBlend + Time.fixedDeltaTime / Mathf.Max(0.0001f, landingBlendTime));
+
+        // Check if body colliders are touching the arena (extra friction/decay)
+        float extraSpinDecay = 0f;
+        if (bodyColliders != null && bodyColliders.Length > 0)
+        {
+            foreach (Collider bodyCol in bodyColliders)
+            {
+                if (bodyCol == null) continue;
+                Collider[] hits = Physics.OverlapSphere(bodyCol.bounds.center, bodyCol.bounds.extents.magnitude * 0.5f, arenaLayer);
+                if (hits.Length > 0)
+                {
+                    extraSpinDecay = bodyContactSpinDecay;
+                    break;
+                }
+            }
+        }
+
+        // Apply extra decay from body contact
+        spinSpeed = Mathf.Max(0f, spinSpeed - extraSpinDecay * Time.fixedDeltaTime);
 
         // Determine contact normal under tip (so movement follows slope)
         Vector3 contactPoint = (tipCollider != null) ? tipCollider.transform.position : transform.position;
@@ -142,48 +184,62 @@ public class BeybladeController : MonoBehaviour
             contactPoint = contactHit.point;
         }
 
-        // Spin along local up
-        float spinAlongUp = Vector3.Dot(rb.angularVelocity, transform.up);
+        // Determine friction based on spinSpeed (high spin = slip, low spin = grip)
+        float frictionLerp = Mathf.InverseLerp(lowSpinThreshold, highSpinThreshold, spinSpeed);
+        float slipFactor = Mathf.Lerp(0.2f, 0.8f, frictionLerp); // 0.2 = high grip, 0.8 = high slip
 
         // Tangent direction for lateral movement
         Vector3 tangent = Vector3.Cross(surfaceNormal, transform.up).normalized;
         if (tangent.sqrMagnitude < 1e-6f) tangent = transform.forward;
-        Vector3 moveDir = tangent * Mathf.Sign(spinAlongUp);
+        Vector3 moveDir = tangent; // direction, will be scaled by slip
 
-        // Compute lateral force from spin (scaled by landingBlend)
+        // Compute lateral force from spin (scaled by landingBlend and slip factor)
         float slopeFactor = 1f + (1f - Vector3.Dot(surfaceNormal, Vector3.up)) * 1.5f;
-        float rawMag = Mathf.Abs(spinAlongUp) * spinToMoveFactor * slopeFactor * landingBlend;
+        float rawMag = spinSpeed * spinToMoveFactor * slopeFactor * landingBlend * slipFactor;
         float clampedMag = Mathf.Clamp(rawMag, 0f, 200f);
         Vector3 lateralForce = moveDir * clampedMag;
         rb.AddForceAtPosition(lateralForce, contactPoint, ForceMode.Acceleration);
 
-        // Gentle lateral damping (preserve vertical velocity)
+        // Lateral damping based on grip (high spin = less damping, low spin = more damping)
+        float gripFactor = 1f - slipFactor; // inverse of slip
         Vector3 vertical = Vector3.Project(rb.linearVelocity, transform.up);
         Vector3 lateral = Vector3.ProjectOnPlane(rb.linearVelocity, transform.up);
-        rb.linearVelocity = vertical + lateral * 0.96f;
+        rb.linearVelocity = vertical + lateral * (0.96f + gripFactor * 0.03f);
 
-        // Gentle pull toward opponent or arena center
+        // Gentle pull toward opponent or arena center (less pull at low spin)
         Vector3 target = (opponent != null) ? opponent.transform.position : Vector3.zero;
         Vector3 dir = (target - transform.position);
         if (dir.sqrMagnitude > 0.01f)
         {
-            Vector3 attraction = dir.normalized * (centerPullStrength / Mathf.Max(1f, dir.magnitude)) * landingBlend;
+            float attractionScale = Mathf.Clamp01(spinSpeed / highSpinThreshold); // less attraction at low spin
+            Vector3 attraction = dir.normalized * (centerPullStrength / Mathf.Max(1f, dir.magnitude)) * landingBlend * attractionScale;
             rb.AddForce(attraction, ForceMode.Acceleration);
         }
 
-        // Upright stabilization torque scaled by spin magnitude
-        float spinMag = Mathf.Abs(spinAlongUp);
-        Vector3 correction = Vector3.Cross(transform.up, Vector3.up);
-        float torque = uprightTorqueBase + spinMag * uprightTorqueSpinScale;
-        rb.AddTorque(correction * torque, ForceMode.Acceleration);
+        // Drive angular velocity from spinSpeed (no upright stabilization torque)
+        rb.angularVelocity = transform.up * spinSpeed;
 
-        // KO detection
-        if (Mathf.Abs(spinAlongUp) < minSpinToLive)
+        // KO detection: spinSpeed reaches zero OR beyblade left arena
+        if (spinSpeed <= 0f)
         {
             koTimer += Time.fixedDeltaTime;
             if (koTimer >= koGraceSeconds) HandleKO();
         }
         else koTimer = 0f;
+    }
+
+    bool HasLeftArena()
+    {
+        // Simple check: if tip is too far below arena or outside a large boundary
+        if (tipCollider != null)
+        {
+            Vector3 tipPos = tipCollider.transform.position;
+            // Check if tip has gone too low (fell out bottom)
+            if (tipPos.y < -50f) return true;
+            // Check if too far horizontally (customize based on your arena)
+            if (new Vector2(tipPos.x, tipPos.z).magnitude > 100f) return true;
+        }
+        return false;
     }
 
     void HandleKO()
@@ -195,15 +251,20 @@ public class BeybladeController : MonoBehaviour
         GameMode.Instance?.OnBeybladeKO(this);
     }
 
-    // External spin add (e.g., player input)
+    // External spin add (e.g., player input) - only increases spinSpeed, never reverses
     public void AddSpin(float spinAmount)
     {
         if (rb == null) rb = GetComponent<Rigidbody>();
-        rb.AddTorque(transform.up * spinAmount, ForceMode.VelocityChange);
-        isKO = false;
-        koTimer = 0f;
-        // allow re-landing behavior if needed
-        hasLanded = false;
+
+        // Only add spin if amount is positive, never reverse
+        if (spinAmount > 0f)
+        {
+            spinSpeed += spinAmount;
+            rb.angularVelocity = transform.up * spinSpeed;
+            isKO = false;
+            koTimer = 0f;
+            hasLanded = false;
+        }
     }
 
 #if UNITY_EDITOR
