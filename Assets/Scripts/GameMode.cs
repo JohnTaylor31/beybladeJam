@@ -19,9 +19,33 @@ public class GameMode : MonoBehaviour
     public GameObject a { get { return _a; } private set { _a = value; } }
     public GameObject b { get { return _b; } private set { _b = value; } }
 
-    void Awake() { if (Instance == null) Instance = this; else Destroy(gameObject); }
+    void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            if (GetComponent<MatchFlowManager>() == null)
+                gameObject.AddComponent<MatchFlowManager>();
+            if (GetComponent<WinScreenUI>() == null)
+                gameObject.AddComponent<WinScreenUI>();
+            if (GetComponent<LaunchMinigame>() == null)
+                gameObject.AddComponent<LaunchMinigame>();
+            if (GetComponent<BeybladeBuilder>() == null)
+                gameObject.AddComponent<BeybladeBuilder>();
+            if (GetComponent<BeybladeBuilderUI>() == null)
+                gameObject.AddComponent<BeybladeBuilderUI>();
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
-    void Start() { StartMatch(); }
+    void Start()
+    {
+        if (MatchFlowManager.Instance == null)
+            StartMatch();
+    }
 
     public void StartMatch()
     {
@@ -58,6 +82,45 @@ public class GameMode : MonoBehaviour
         var ca = a.GetComponent<BeybladeController>();
         var cb = b.GetComponent<BeybladeController>();
         if (ca != null && cb != null) { ca.opponent = cb; cb.opponent = ca; }
+
+        // Apply modular stats from BeybladeBuilder if available
+        if (BeybladeBuilder.Instance != null)
+        {
+            BeybladeStats playerStats = BeybladeBuilder.Instance.BuildPlayerStats();
+            BeybladeStats opponentStats = BeybladeBuilder.Instance.BuildOpponentStats();
+
+            if (ca != null) ca.stats = playerStats;
+            if (cb != null) cb.stats = opponentStats;
+
+            // Re-apply stats since they were already loaded in Start
+            if (ca != null) ca.ReloadStats();
+            if (cb != null) cb.ReloadStats();
+        }
+
+        float powerA = LaunchMinigame.Instance != null ? LaunchMinigame.Instance.LaunchPowerA : 1f;
+        float powerB = LaunchMinigame.Instance != null ? LaunchMinigame.Instance.LaunchPowerB : 1f;
+        if (ca != null) ca.ApplyLaunchPower(powerA);
+        if (cb != null) cb.ApplyLaunchPower(powerB);
+
+        EnsureCombatTracker(a);
+        EnsureCombatTracker(b);
+    }
+
+    public string GetDisplayName(GameObject blade)
+    {
+        if (blade == null)
+            return "Unknown";
+        if (blade == a)
+            return useInspectorSpawn && playerBeyblade != null ? playerBeyblade.name : "Beyblade A";
+        if (blade == b)
+            return useInspectorSpawn && opponentBeyblade != null ? opponentBeyblade.name : "Beyblade B";
+        return blade.name;
+    }
+
+    static void EnsureCombatTracker(GameObject blade)
+    {
+        if (blade != null && blade.GetComponent<BeybladeCombatTracker>() == null)
+            blade.AddComponent<BeybladeCombatTracker>();
     }
 
     void CleanupBeyblades()
@@ -83,7 +146,11 @@ public class GameMode : MonoBehaviour
 
     public void OnBeybladeKO(BeybladeController ko)
     {
-        Invoke(nameof(Restart), restartDelay);
+        CancelInvoke(nameof(Restart));
+        if (MatchFlowManager.Instance != null)
+            MatchFlowManager.Instance.NotifyKO(ko);
+        else
+            Invoke(nameof(Restart), restartDelay);
     }
 
     void Restart() { StartMatch(); }

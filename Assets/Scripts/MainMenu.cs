@@ -7,7 +7,14 @@ public class MainMenu : MonoBehaviour
 {
     public void PlayGame()
     {
-        SceneManager.LoadSceneAsync("SampleScene");
+        var load = SceneManager.LoadSceneAsync("ArenaTestArea 4KEVIN EXPERIMENTS");
+        load.completed += _ =>
+        {
+            if (MatchFlowManager.Instance != null)
+                MatchFlowManager.Instance.BeginFlow();
+            else if (GameMode.Instance != null)
+                GameMode.Instance.StartMatch();
+        };
     }
 
     public void QuitGame()

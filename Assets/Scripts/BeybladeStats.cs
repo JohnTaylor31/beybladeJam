@@ -28,4 +28,8 @@ public class BeybladeStats : ScriptableObject
     [Header("KO")]
     public float minSpinToLive = 30f;
     public float koGraceSeconds = 0.5f;
+
+    [Header("Directional Assist")]
+    public float assistSpinCost = 0.5f;        // spin cost per second while using directional assist
+    public float assistForce = 50f;            // lateral force magnitude for directional assist
 }

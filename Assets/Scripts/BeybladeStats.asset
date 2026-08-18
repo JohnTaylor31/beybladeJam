@@ -23,3 +23,5 @@ MonoBehaviour:
   centerPullStrength: 1
   minSpinToLive: 0.1
   koGraceSeconds: 0.5
+  assistSpinCost: 0.5
+  assistForce: 50

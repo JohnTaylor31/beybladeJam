@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
 public class BeybladeController : MonoBehaviour
@@ -19,6 +20,8 @@ public class BeybladeController : MonoBehaviour
     public float fallbackSpinDecay = 0.02f;     // spin decay per second
     public float fallbackBodyContactDecay = 0.5f; // spin decay when body collider touches arena
     public float fallbackKoGrace = 0.5f;
+    public float fallbackAssistSpinCost = 0.5f; // spin cost per second while using assist
+    public float fallbackAssistForce = 50f;     // lateral force magnitude for assist
 
     [Header("Rigidbody tuning")]
     public float baseMass = 200f;               // base mass; multiplied by stats.massMultiplier if provided
@@ -33,6 +36,8 @@ public class BeybladeController : MonoBehaviour
     public float launchImpulse = 1f;            // small horizontal impulse applied at tip (tune or set to 0)
     public float landingRayDistance = 0.25f;    // short ray to detect tip contact
     public float landingBlendTime = 0.12f;      // smooth in lateral forces after landing
+    [Range(0f, 1f)] public float launchPower = 1f;
+    public ParticleSystem launchBurstPrefab;
 
     [Header("Friction blending")]
     public float highSpinThreshold = 500f;      // spin speed above this = high slip
@@ -57,6 +62,9 @@ public class BeybladeController : MonoBehaviour
     float spinDecayPerSecond;
     float bodyContactSpinDecay;
     float koGraceSeconds;
+    float assistSpinCost;
+    float assistForce;
+    bool _launchReady;
 
     void Awake()
     {
@@ -65,30 +73,7 @@ public class BeybladeController : MonoBehaviour
 
     void Start()
     {
-        // Load tuning from stats or fallback
-        if (stats != null)
-        {
-            initialSpin = stats.initialSpin;
-            spinToMoveFactor = stats.spinToMoveFactor;
-            centerPullStrength = stats.centerPullStrength;
-            spinDecayPerSecond = stats.staminaDecayPerSecond;
-            bodyContactSpinDecay = stats.staminaDecayPerSecond * 25f; // extra decay on body contact
-            koGraceSeconds = stats.koGraceSeconds;
-            rb.mass = baseMass * Mathf.Max(0.01f, stats.massMultiplier);
-        }
-        else
-        {
-            initialSpin = fallbackInitialSpin;
-            spinToMoveFactor = fallbackSpinToMove;
-            centerPullStrength = fallbackCenterPull;
-            spinDecayPerSecond = fallbackSpinDecay;
-            bodyContactSpinDecay = fallbackBodyContactDecay;
-            koGraceSeconds = fallbackKoGrace;
-            rb.mass = baseMass;
-        }
-
-        // Initialize spinSpeed to initial rotation
-        spinSpeed = initialSpin;
+        LoadStats();
 
         // Rigidbody basic tuning
         rb.centerOfMass = centerOfMassOffset;
@@ -102,19 +87,124 @@ public class BeybladeController : MonoBehaviour
         // Gravity scale must be 1.0
         rb.useGravity = true;
 
-        // Apply initial spin around local up (driven by spinSpeed)
-        rb.angularVelocity = transform.up * spinSpeed;
-
-        // Small horizontal impulse at tip (no vertical component)
-        if (tipCollider != null && launchImpulse > 0f)
-        {
-            Vector3 horizontalForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
-            rb.AddForceAtPosition(horizontalForward * launchImpulse, tipCollider.transform.position, ForceMode.Impulse);
-        }
+        _launchReady = true;
+        ApplyLaunchPower(launchPower);
 
         // Increase solver iterations for more stable impacts
         Physics.defaultSolverIterations = Mathf.Max(Physics.defaultSolverIterations, 12);
         Physics.defaultSolverVelocityIterations = Mathf.Max(Physics.defaultSolverVelocityIterations, 4);
+    }
+
+    void LoadStats()
+    {
+        // Load tuning from stats or fallback
+        if (stats != null)
+        {
+            initialSpin = stats.initialSpin;
+            spinToMoveFactor = stats.spinToMoveFactor;
+            centerPullStrength = stats.centerPullStrength;
+            spinDecayPerSecond = stats.staminaDecayPerSecond;
+            bodyContactSpinDecay = stats.staminaDecayPerSecond * 25f; // extra decay on body contact
+            koGraceSeconds = stats.koGraceSeconds;
+            assistSpinCost = stats.assistSpinCost;
+            assistForce = stats.assistForce;
+            rb.mass = baseMass * Mathf.Max(0.01f, stats.massMultiplier);
+        }
+        else
+        {
+            initialSpin = fallbackInitialSpin;
+            spinToMoveFactor = fallbackSpinToMove;
+            centerPullStrength = fallbackCenterPull;
+            spinDecayPerSecond = fallbackSpinDecay;
+            bodyContactSpinDecay = fallbackBodyContactDecay;
+            koGraceSeconds = fallbackKoGrace;
+            assistSpinCost = fallbackAssistSpinCost;
+            assistForce = fallbackAssistForce;
+            rb.mass = baseMass;
+        }
+    }
+
+    public void ReloadStats()
+    {
+        LoadStats();
+    }
+
+    public void ApplyLaunchPower(float power)
+    {
+        launchPower = Mathf.Clamp01(power);
+        if (!_launchReady || rb == null)
+            return;
+
+        spinSpeed = initialSpin * launchPower;
+        rb.angularVelocity = transform.up * spinSpeed;
+
+        if (tipCollider != null && launchImpulse > 0f)
+        {
+            Vector3 horizontalForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+            rb.AddForceAtPosition(horizontalForward * launchImpulse * launchPower, tipCollider.transform.position, ForceMode.Impulse);
+        }
+
+        PlayLaunchBurst();
+    }
+
+    void PlayLaunchBurst()
+    {
+        ParticleSystem prefab = launchBurstPrefab;
+        if (prefab == null)
+        {
+            BeybladeCollisionEffects collisionFx = GetComponent<BeybladeCollisionEffects>();
+            if (collisionFx != null)
+                prefab = collisionFx.collisionEffectPrefab;
+        }
+
+        Vector3 pos = transform.position + Vector3.up * 0.6f;
+        float power = Mathf.Clamp01(launchPower);
+
+        if (prefab != null)
+        {
+            ParticleSystem ps = Instantiate(prefab, pos, Quaternion.Euler(-90f, 0f, 0f));
+            var main = ps.main;
+            main.loop = false;
+            main.startSizeMultiplier *= Mathf.Lerp(0.5f, 1.8f, power);
+            main.startSpeedMultiplier *= Mathf.Lerp(0.5f, 2f, power);
+            ps.Play();
+            Destroy(ps.gameObject, main.duration + 0.5f);
+            return;
+        }
+
+        GameObject go = new GameObject("LaunchBurst");
+        go.transform.position = pos;
+        ParticleSystem fallback = go.AddComponent<ParticleSystem>();
+        var fbMain = fallback.main;
+        fbMain.duration = 0.2f;
+        fbMain.loop = false;
+        fbMain.playOnAwake = false;
+        fbMain.startLifetime = 0.4f;
+        fbMain.startSpeed = Mathf.Lerp(5f, 16f, power);
+        fbMain.startSize = Mathf.Lerp(0.12f, 0.4f, power);
+        fbMain.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.7f, 0.15f), new Color(1f, 0.35f, 0.05f));
+        fbMain.gravityModifier = 0.35f;
+        fbMain.maxParticles = 64;
+        fbMain.simulationSpace = ParticleSystemSimulationSpace.World;
+
+        var emission = fallback.emission;
+        emission.rateOverTime = 0f;
+        emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)Mathf.RoundToInt(Mathf.Lerp(10f, 42f, power))) });
+
+        var shape = fallback.shape;
+        shape.shapeType = ParticleSystemShapeType.Cone;
+        shape.angle = 28f;
+        shape.radius = 0.15f;
+
+        ParticleSystemRenderer psRenderer = go.GetComponent<ParticleSystemRenderer>();
+        Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+        if (shader == null)
+            shader = Shader.Find("Sprites/Default");
+        if (shader != null)
+            psRenderer.material = new Material(shader);
+
+        fallback.Play();
+        Destroy(go, 1.5f);
     }
 
     void FixedUpdate()
@@ -219,6 +309,12 @@ public class BeybladeController : MonoBehaviour
         // Drive angular velocity from spinSpeed (no upright stabilization torque)
         rb.angularVelocity = transform.up * spinSpeed;
 
+        // Apply directional assist (only during Playing state and after landing)
+        if (hasLanded && IsPlayingState())
+        {
+            ApplyDirectionalAssist();
+        }
+
         // KO detection: spinSpeed reaches zero OR beyblade left arena
         if (spinSpeed <= 0f)
         {
@@ -249,6 +345,69 @@ public class BeybladeController : MonoBehaviour
         rb.angularDamping = Mathf.Max(rb.angularDamping, 1f);
         rb.linearDamping = Mathf.Max(rb.linearDamping, 1f);
         GameMode.Instance?.OnBeybladeKO(this);
+    }
+
+    bool IsPlayingState()
+    {
+        if (MatchFlowManager.Instance == null)
+            return true; // Fallback: allow assist if no flow manager
+        return MatchFlowManager.Instance.CurrentState == MatchState.Playing;
+    }
+
+    void ApplyDirectionalAssist()
+    {
+        // Read input from WASD or left stick
+        Vector2 input = Vector2.zero;
+
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.wKey.isPressed) input.y += 1f;
+            if (Keyboard.current.sKey.isPressed) input.y -= 1f;
+            if (Keyboard.current.aKey.isPressed) input.x -= 1f;
+            if (Keyboard.current.dKey.isPressed) input.x += 1f;
+        }
+
+        if (Gamepad.current != null)
+        {
+            Vector2 stickInput = Gamepad.current.leftStick.ReadValue();
+            if (stickInput.magnitude > 0.1f)
+                input = stickInput;
+        }
+
+        // Normalize input and check if there's meaningful input
+        if (input.magnitude < 0.1f)
+            return;
+
+        input = input.normalized;
+
+        // Convert 2D input to 3D world space direction
+        Vector3 worldDirection = new Vector3(input.x, 0f, input.y);
+
+        // Project onto arena surface using current surface normal
+        Vector3 contactPoint = (tipCollider != null) ? tipCollider.transform.position : transform.position;
+        RaycastHit contactHit;
+        Vector3 surfaceNormal = Vector3.up;
+        if (Physics.Raycast(contactPoint, -transform.up, out contactHit, contactRayDistance, arenaLayer))
+        {
+            surfaceNormal = contactHit.normal;
+        }
+
+        // Project direction onto the surface plane
+        Vector3 surfaceDirection = Vector3.ProjectOnPlane(worldDirection, surfaceNormal).normalized;
+        if (surfaceDirection.sqrMagnitude < 1e-6f)
+            return;
+
+        // Reduce assist strength when spin is low
+        float spinFactor = Mathf.Clamp01(spinSpeed / lowSpinThreshold);
+
+        // Spin-scaled assist force
+        Vector3 assistForceVector = surfaceDirection * assistForce * spinFactor;
+
+        rb.AddForceAtPosition(assistForceVector, contactPoint, ForceMode.Acceleration);
+
+        // Apply spin cost for using assist
+        spinSpeed = Mathf.Max(0f, spinSpeed - assistSpinCost * Time.fixedDeltaTime);
+
     }
 
     // External spin add (e.g., player input) - only increases spinSpeed, never reverses
