@@ -176,7 +176,6 @@ public class BeybladeController : MonoBehaviour
         go.transform.position = pos;
         ParticleSystem fallback = go.AddComponent<ParticleSystem>();
         var fbMain = fallback.main;
-        fbMain.duration = 0.2f;
         fbMain.loop = false;
         fbMain.playOnAwake = false;
         fbMain.startLifetime = 0.4f;

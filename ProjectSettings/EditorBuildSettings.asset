@@ -15,5 +15,6 @@ EditorBuildSettings:
     path: Assets/Scenes/ArenaTestArea 4KEVIN EXPERIMENTS.unity
     guid: e72331fb9d0b5174bb717ac254601aad
   m_configObjects:
+    com.unity.input.settings: {fileID: 11400000, guid: ceb7600bbc94e324e873557422b7103a, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
